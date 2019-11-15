@@ -82,6 +82,7 @@
     /*加载中的函数*/
     function loading(step) {
         document.querySelector(".progress").innerText = step.progress + "%";
+        /*加载完成后，隐藏加载层*/
         if(step.progress >= 100) {
             document.querySelector("#mark").style.display = "none"
         }
@@ -113,49 +114,7 @@
         sprites.ship.anchor.x = 0.5;
         sprites.ship.anchor.y = 0.5;
         //sprites.ship.rotation = -1
-        const animateOption = {
-            ship: [{
-                delay: 0.01,
-                duration: 0.1,
-                to: { x: 323, y: 416, ease:Power0.easeNone }
-            },{
-                delay: 0.09,
-                duration: 0.1,
-                to: { y: 520, ease:Power0.easeNone }
-            },{
-                delay: 0.195,
-                duration: 0.2,
-                to: { x: 50,y: 950, ease:Power0.easeNone }
-            },{
-                delay: 0.399,
-                duration: 0.2,
-                to: { x: 353,y: 1550, ease:Power0.easeNone }
-            },{
-                delay: 0.6,
-                duration: 0.2,
-                to: { x: 353,y: 1750, ease:Power0.easeNone }
-            },{
-                delay: 0.8,
-                duration: 0.2,
-                to: { x: 50,y: 2150, ease:Power0.easeNone }
-            }]
-        };
 
-        for(let index in animateOption) {
-            if(animateOption.hasOwnProperty(index)) {
-                let animateMove = animateOption[index];   //每一项的动画效果
-                for(let i = 0; i < animateMove.length; i ++) {
-                    /*动画的元素*/
-                    let animateTarget = sprites[index];
-                    /*动画效果*/
-                    let animateEffect = TweenMax.to(animateTarget, animateMove[i].duration, animateMove[i].to);
-                    let tm = new TimelineMax({delay: animateMove[i].delay});
-                    tm.add(animateEffect, 0);
-                    tm.play();
-                    timeline.add(tm, 0)
-                }
-            }
-        }
 
 
 
@@ -168,6 +127,9 @@
 
         /*初始化滑动*/
         initTouch();
+        /*动画效果初始化*/
+        animateEffect();
+        /*渲染舞台*/
         app.render(stageArr);
     }
 
@@ -246,6 +208,53 @@
                 }
             }
         })
+    }
+    /*动画效果*/
+    function animateEffect() {
+        /*动画效果的定义*/
+        const animateOption = {
+            ship: [{
+                delay: 0.01,
+                duration: 0.1,
+                to: { x: 323, y: 416, ease:Power0.easeNone }
+            },{
+                delay: 0.09,
+                duration: 0.1,
+                to: { y: 520, ease:Power0.easeNone }
+            },{
+                delay: 0.195,
+                duration: 0.2,
+                to: { x: 50,y: 950, ease:Power0.easeNone }
+            },{
+                delay: 0.399,
+                duration: 0.2,
+                to: { x: 353,y: 1550, ease:Power0.easeNone }
+            },{
+                delay: 0.6,
+                duration: 0.2,
+                to: { x: 353,y: 1750, ease:Power0.easeNone }
+            },{
+                delay: 0.8,
+                duration: 0.2,
+                to: { x: 50,y: 2150, ease:Power0.easeNone }
+            }]
+        };
+        /*动画效果的创建*/
+        for(let index in animateOption) {
+            if(animateOption.hasOwnProperty(index)) {
+                let animateMove = animateOption[index];   //每一项的动画效果
+                for(let i = 0; i < animateMove.length; i ++) {
+                    /*动画的元素*/
+                    let animateTarget = sprites[index];
+                    /*动画效果*/
+                    let animateEffect = TweenMax.to(animateTarget, animateMove[i].duration, animateMove[i].to);
+                    let tm = new TimelineMax({delay: animateMove[i].delay});
+                    tm.add(animateEffect, 0);
+                    tm.play();
+                    timeline.add(tm, 0)
+                }
+            }
+        }
     }
     /*舞台的整体缩放*/
     let scale = windowWidth / 375;
