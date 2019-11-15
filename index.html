@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./lib/pixi.js"></script>
+    <script src="./lib/pixi-layers.js"></script>
+    <script src="./lib/Alloytouch.js"></script>
+    <script src="./lib/TweenMax.min.js"></script>
+    <script src="./lib/TimelineMax.min.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #mark {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: skyblue;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .progress {
+            font-size: 40px;
+            color: #ffffff;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+<div id="mark">
+    <div class="progress">0</div>
+</div>
+<script>
+    /*获取屏幕的宽高*/
+    const windowWidth = window.innerWidth,
+          windowHeight = window.innerHeight;
+    /*创建pixi应用*/
+    let app = new PIXI.Application({
+        width: windowWidth,
+        height: windowHeight
+    });
+    /*将元素添加到页面*/
+    document.body.appendChild(app.view);
+    /*拓展layer*/
+    var layer = new PIXI.display.Layer();
+    //app.stage.width = 375;
+    /*创建舞台的集合*/
+    let stageArr = [];
+    /*精灵的集合*/
+    let sprites = [];
+    /*滑动的函数*/
+    let alloyTouch;
+    /*初始化总体的进度条*/
+    let timeline = new TimelineMax({
+        paused: true
+    });
+    /*加载纹理图片*/
+    PIXI.loader
+        .add([
+            { name: "bg1", url: "./images/bg_01.png" },
+            { name: "bg2", url: "./images/bg_02.png" },
+            { name: "bg3", url: "./images/bg_03.png" },
+            { name: "bg4", url: "./images/bg_04.png" },
+            { name: "ship", url: "./images/ship.png" },
+            { name: "move1", url: "./images/move_1.JPG" },
+            { name: "move2", url: "./images/move_2.JPG" },
+            { name: "move3", url: "./images/move_3.JPG" },
+            { name: "move4", url: "./images/move_4.JPG" },
+            { name: "move5", url: "./images/move_5.JPG" },
+        ])
+        .on("progress", loading) //加载中
+        .load(setUp); //加载完成
+    
+    /*加载中的函数*/
+    function loading(step) {
+        document.querySelector(".progress").innerText = step.progress + "%";
+        if(step.progress >= 100) {
+            document.querySelector("#mark").style.display = "none"
+        }
+    }
+    /*加载完成的函数*/
+    function setUp(res, resource) {
+        buildStage(); //舞台创建成功
+        /*循环生成精灵*/
+        for(let key in resource) {
+            if(resource.hasOwnProperty(key)) {
+                sprites[key] = new PIXI.Sprite.fromImage(resource[key].url);
+                sprites[key].width = resource[key].data.width / 2;
+                sprites[key].height = resource[key].data.height / 2;
+            }
+        }
+
+        console.log(sprites);
+
+
+        stageArr.stage_one.addChild(sprites.bg1);
+        stageArr.stage_two.addChild(sprites.bg2);
+        stageArr.stage_three.addChild(sprites.bg3);
+        stageArr.stage_four.addChild(sprites.bg4);
+        app.stage.addChild(sprites.ship);
+        sprites.ship.x = 250;
+        sprites.ship.y = 70;
+
+
+        sprites.ship.anchor.x = 0.5;
+        sprites.ship.anchor.y = 0.5;
+        //sprites.ship.rotation = -1
+        const animateOption = {
+            ship: [{
+                delay: 0.01,
+                duration: 0.1,
+                to: { x: 323, y: 416, ease:Power0.easeNone }
+            },{
+                delay: 0.09,
+                duration: 0.1,
+                to: { y: 520, ease:Power0.easeNone }
+            },{
+                delay: 0.195,
+                duration: 0.2,
+                to: { x: 50,y: 950, ease:Power0.easeNone }
+            },{
+                delay: 0.399,
+                duration: 0.2,
+                to: { x: 353,y: 1550, ease:Power0.easeNone }
+            },{
+                delay: 0.6,
+                duration: 0.2,
+                to: { x: 353,y: 1750, ease:Power0.easeNone }
+            },{
+                delay: 0.8,
+                duration: 0.2,
+                to: { x: 50,y: 2150, ease:Power0.easeNone }
+            }]
+        };
+
+        for(let index in animateOption) {
+            if(animateOption.hasOwnProperty(index)) {
+                let animateMove = animateOption[index];   //每一项的动画效果
+                for(let i = 0; i < animateMove.length; i ++) {
+                    /*动画的元素*/
+                    let animateTarget = sprites[index];
+                    /*动画效果*/
+                    let animateEffect = TweenMax.to(animateTarget, animateMove[i].duration, animateMove[i].to);
+                    let tm = new TimelineMax({delay: animateMove[i].delay});
+                    tm.add(animateEffect, 0);
+                    tm.play();
+                    timeline.add(tm, 0)
+                }
+            }
+        }
+
+
+
+        /*let test = TweenMax.to(sprites.ship, 4, {x: 100, y: 5000});
+        let tm = new TimelineMax({delay: 0.01});
+        tm.add(test, 0);
+        tm.play();
+        timeline.add(tm, 0);*/
+
+
+        /*初始化滑动*/
+        initTouch();
+        app.render(stageArr);
+    }
+
+
+
+    /*创建舞台*/
+    function buildStage() {
+        let stageDate = [
+            {
+                name: "stage_one",
+                width: 375,
+                height: 667,
+                x: 0,
+                y: 0,
+                isShow: false
+            },
+            {
+                name: "stage_two",
+                width: 375,
+                height: 667,
+                x: 0,
+                y: 667,
+                isShow: false
+            },
+            {
+                name: "stage_three",
+                width: 375,
+                height: 667,
+                x: 0,
+                y: 1334,
+                isShow: false
+            },
+            {
+                name: "stage_four",
+                width: 375,
+                height: 667,
+                x: 0,
+                y: 2001,
+                isShow: false
+            },
+        ];
+        for(let i = 0; i < stageDate.length; i ++) {
+            stageArr[stageDate[i].name] = new PIXI.Container({
+                width: stageDate[i].width,
+                height: stageDate[i].height
+            });
+            stageArr[stageDate[i].name].y = stageDate[i].y;
+            //stageArr[stageDate[i].name].visible = stageDate[i].isShow;
+            app.stage.addChild(stageArr[stageDate[i].name]);
+        }
+    }
+    /*滑动函数*/
+    function initTouch() {
+       let touchMin = app.stage.height - windowHeight;
+        alloyTouch = new AlloyTouch({
+            touch: "canvas",
+            vertical: true,
+            maxSpeed: 0.5,
+            min: -touchMin,
+            max: 0,
+            sensitivity: 0.3,  //触摸的灵敏度
+            bindSelf: false,
+            initialValue: 0,
+            change: function (distance) {
+                app.stage.position.y = distance;
+                let progress = -distance / touchMin;
+                progress = progress < 0 ? 0 : progress;
+                progress = progress > 1 ? 1 : progress;
+                console.log(progress);
+                timeline.seek(progress);
+
+                if(progress>=0.5657 && progress <=0.73383) {
+                    sprites.ship.visible = false
+                }else {
+                    sprites.ship.visible = true
+                }
+            }
+        })
+    }
+    /*舞台的整体缩放*/
+    let scale = windowWidth / 375;
+    app.stage.scale.set(scale,scale)
+</script>
+</body>
+</html>
